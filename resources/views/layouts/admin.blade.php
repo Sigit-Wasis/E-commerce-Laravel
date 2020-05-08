@@ -9,7 +9,7 @@
   <meta name="keyword" content="aplikasi ecommerce laravel, tutorial laravel basic, belajar laravel, panduan belajar laravel">
     
   	<!-- PERHATIKAN BAGIAN INI, APAPUN YANG DIAPIT OLEH @SECTION('TITLE') PADA VIEW YANG MENGGUNAKAN MASTER INI, MAKA AKAN ME-REPLACE CODE DIBAWAH -->
-  	<!-- TITLE MENJADI KATA KUNCI, JADI JIKA MENGGUNAKAN KEY TITLE PADA @YIELD, MAKA GUNAKAN KEY TITLE PADA @SECTION -->
+    <!-- TITLE MENJADI KATA KUNCI, JADI JIKA MENGGUNAKAN KEY TITLE PADA YIELD, MAKA GUNAKAN KEY TITLE PADA SECTION -->
     @yield('title')
 
   <!-- UNTUK ME-LOAD ASSET DARI PUBLIC, KITA GUNAKAN HELPER ASSET() -->
@@ -20,9 +20,6 @@
 </head>
 <body class="app header-fixed sidebar-fixed aside-menu-fixed sidebar-lg-show">
   
-    <!-- @INCLUDE SAMA DENGAN FUNGSI INCLUDE DI PHP, HANYA SAJA PENULISAN DIBLADE MENJADI @INCLUDE, BERARTI KITA ME-LOAD FILE LAINNYA -->
-  	<!-- KENAPA HEADER DIPISAHKAN? AGAR LEBIH RAPI SAJA JADI LEBIH MUDAH MAINTENANCENYA -->
-    <!-- KETIKA MELOAD FILE BLADE, MAKA EKSTENSI .BLADE.PHP TIDAK PERLU DITULISKAN -->
     @include('layouts.module.header')
   
     <div class="app-body" id="dw">
@@ -35,7 +32,7 @@
             <button class="sidebar-minimizer brand-minimizer" type="button"></button>
         </div>
       
-      	<!-- BAGIAN INI AKAN DI-REPLACE SESUAI ISI YANG DIAPIT DARI @SECTION('CONTENT') -->
+      	<!-- BAGIAN INI AKAN DI-REPLACE SESUAI ISI YANG DIAPIT DARI SECTION('CONTENT') -->
         @yield('content')
       
     </div>
