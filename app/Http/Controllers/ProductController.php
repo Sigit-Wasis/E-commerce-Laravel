@@ -103,4 +103,11 @@ class ProductController extends Controller
 	        return redirect()->back()->with(['success' => 'Upload Produk Dijadwalkan']);
 	    }
 	}
+
+	public function edit($id)
+	{
+	    $product = Product::find($id); //AMBIL DATA PRODUK TERKAIT BERDASARKAN ID
+	    $category = Category::orderBy('name', 'DESC')->get(); //AMBIL SEMUA DATA KATEGORI
+	    return view('products.edit', compact('product', 'category')); //LOAD VIEW DAN PASSING DATANYA KE VIEW
+	}
 }
