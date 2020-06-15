@@ -45,6 +45,10 @@ Route::group(['prefix' => 'member', 'namespace' => 'Ecommerce'], function() {
     	// payment gateway
     	Route::get('payment', 'OrderController@paymentForm')->name('customer.paymentForm');
 		Route::post('payment', 'OrderController@storePayment')->name('customer.savePayment');
+
+        // setting customer
+        Route::get('setting', 'FrontController@customerSettingForm')->name('customer.settingForm');
+        Route::post('setting', 'FrontController@customerUpdateProfile')->name('customer.setting');
     	
     	Route::get('logout', 'LoginController@logout')->name('customer.logout');
 	});

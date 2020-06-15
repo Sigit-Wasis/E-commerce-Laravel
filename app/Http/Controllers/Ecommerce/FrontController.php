@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Product;
 use App\Category;
+use App\Province;
 use App\Customer;
 
 class FrontController extends Controller
@@ -60,5 +61,43 @@ class FrontController extends Controller
 	    //JIKA TIDAK ADA, MAKA REDIRECT KE HALAMAN LOGIN
 	    //DENGAN MENGIRIMKAN FLASH SESSION ERROR
 	    return redirect(route('customer.login'))->with(['error' => 'Invalid Verifikasi Token']);
+	}
+
+	public function customerSettingForm()
+	{
+	    //MENGAMBIL DATA CUSTOMER YANG SEDANG LOGIN
+	    // Fungsi load() cara kerjanya sama dengan eager loading, maka definisikan relationships customer ke district.
+	    $customer = auth()->guard('customer')->user()->load('district');
+	    //GET DATA PROPINSI UNTUK DITAMPILKAN PADA SELECT BOX
+	    $provinces = Province::orderBy('name', 'ASC')->get();
+	    //LOAD VIEW setting.blade.php DAN PASSING DATA CUSTOMER - PROVINCES
+	    return view('ecommerce.setting', compact('customer', 'provinces'));
+	}
+
+	public function customerUpdateProfile(Request $request)
+	{
+	    //VALIDASI DATA YANG DIKIRIM
+	    $this->validate($request, [
+	        'name' => 'required|string|max:100',
+	        'phone_number' => 'required|max:15',
+	        'address' => 'required|string',
+	        'district_id' => 'required|exists:districts,id',
+	        'password' => 'nullable|string|min:6'
+	    ]);
+
+	    //AMBIL DATA CUSTOMER YANG SEDANG LOGIN
+	    $user = auth()->guard('customer')->user();
+	    //AMBIL DATA YANG DIKIRIM DARI FORM
+	    //TAPI HANYA 4 COLUMN SAJA SESUAI YANG ADA DI BAWAH
+	    $data = $request->only('name', 'phone_number', 'address', 'district_id');
+	    //ADAPUN PASSWORD KITA CEK DULU, JIKA TIDAK KOSONG
+	    if ($request->password != '') {
+	        //MAKA TAMBAHKAN KE DALAM ARRAY
+	        $data['password'] = $request->password;
+	    }
+	    //TERUS UPDATE DATANYA
+	    $user->update($data);
+	    //DAN REDIRECT KEMBALI DENGAN MENGIRIMKAN PESAN BERHASIL
+	    return redirect()->back()->with(['success' => 'Profil berhasil diperbaharui']);
 	}
 }
