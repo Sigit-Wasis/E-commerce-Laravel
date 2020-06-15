@@ -22,7 +22,16 @@ class OrderController extends Controller
 		// Line pertama adalah query untuk mengambil data order berdasarkan invoice, kemudian me-load data yang berelasi dengan menggunakan eager loading.
 	    $order = Order::with(['district.city.province', 'details', 'details.product', 'payment'])
 	        ->where('invoice', $invoice)->first();
-	    return view('ecommerce.orders.view', compact('order'));
+
+	    //JADI KITA CEK, VALUE forUser() NYA ADALAH CUSTOMER YANG SEDANG LOGIN
+	    //DAN ALLOW NYA MEMINTA DUA PARAMETER
+	    //PERTAMA ADALAH NAMA GATE YANG DIBUAT SEBELUMNYA DAN YANG KEDUA ADALAH DATA ORDER DARI QUERY DI ATAS
+	    if (\Gate::forUser(auth()->guard('customer')->user())->allows('order-view', $order)) {
+	        //JIKA HASILNYA TRUE, MAKA KITA TAMPILKAN DATANYA
+	        return view('ecommerce.orders.view', compact('order'));
+	    }
+	    //JIKA FALSE, MAKA REDIRECT KE HALAMAN YANG DIINGINKAN
+	    return redirect(route('customer.orders'))->with(['error' => 'Anda Tidak Diizinkan Untuk Mengakses Order Orang Lain']);
 	}
 
 	public function paymentForm()
