@@ -36,4 +36,10 @@ class Order extends Model
 	{
 	    return $this->hasMany(OrderDetail::class);
 	}
+
+	// Bagian terakhir adalah membuat relasi dari orders ke payments, buka file Order.php
+	public function payment()
+	{
+	    return $this->hasOne(Payment::class);
+	}
 }
