@@ -37,6 +37,9 @@ Route::group(['prefix' => 'member', 'namespace' => 'Ecommerce'], function() {
 
     Route::group(['middleware' => 'customer'], function() {
     	Route::get('dashboard', 'LoginController@dashboard')->name('customer.dashboard');
+    	Route::get('orders', 'OrderController@index')->name('customer.orders');
+    	Route::get('orders/{invoice}', 'OrderController@view')->name('customer.view_order');
+    	
     	Route::get('logout', 'LoginController@logout')->name('customer.logout');
 	});
 });
