@@ -41,6 +41,7 @@ Route::group(['prefix' => 'member', 'namespace' => 'Ecommerce'], function() {
     	// order customer
     	Route::get('orders', 'OrderController@index')->name('customer.orders');
     	Route::get('orders/{invoice}', 'OrderController@view')->name('customer.view_order');
+        Route::get('orders/pdf/{invoice}', 'OrderController@pdf')->name('customer.order_pdf');
 
     	// payment gateway
     	Route::get('payment', 'OrderController@paymentForm')->name('customer.paymentForm');
@@ -68,5 +69,13 @@ Route::group(['prefix' => 'administrator', 'middleware' => 'auth'], function() {
 	Route::resource('product', 'ProductController')->except(['show']); //BAGIAN INI KITA TAMBAHKAN EXCETP KARENA METHOD SHOW TIDAK DIGUNAKAN
 	Route::get('/product/bulk', 'ProductController@massUploadForm')->name('product.bulk'); //TAMBAHKAN ROUTE INI
 	Route::post('/product/bulk', 'ProductController@massUpload')->name('product.saveBulk');
+
+    Route::group(['prefix' => 'orders'], function() {
+        Route::get('/', 'OrderController@index')->name('orders.index');
+        Route::delete('/{id}', 'OrderController@destroy')->name('orders.destroy');
+        Route::get('/{invoice}', 'OrderController@view')->name('orders.view');
+        Route::get('/payment/{invoice}', 'OrderController@acceptPayment')->name('orders.approve_payment');
+        Route::post('/shipping', 'OrderController@shippingOrder')->name('orders.shipping');
+    });
 });
 

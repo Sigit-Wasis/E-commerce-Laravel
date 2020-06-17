@@ -62,7 +62,20 @@
                                   <td>{!! $row->status_label !!}</td>
                                   <td>{{ $row->created_at }}</td>
                                   <td>
-                                      <a href="{{ route('customer.view_order', $row->invoice) }}" class="btn btn-primary btn-sm">Detail</a>
+                                    <form action="{{ route('customer.order_accept') }}" 
+                                        class="form-inline"
+                                        onsubmit="return confirm('Kamu Yakin?');" method="post">
+                                        @csrf
+
+                                        <!-- TOMBOL VIEW ORDER KITA BUNGKUS JG DENGAN FORM AGAR RAPI -->
+                                        <a href="{{ route('customer.view_order', $row->invoice) }}" class="btn btn-primary btn-sm mr-1">Detail</a>
+                                      
+                                        <input type="hidden" name="order_id" value="{{ $row->id }}">
+                                        @if ($row->status == 3)
+                                            <button class="btn btn-success btn-sm">Terima</button>
+                                            <!-- TOMBOL RETURN AKAN DITEMPATKAN DISINI PADA SUB-BAB SELANJUTNYA -->
+                                        @endif
+                                    </form>
                                   </td>
                               </tr>
                               @empty

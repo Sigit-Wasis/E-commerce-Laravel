@@ -8,6 +8,7 @@ use App\Order;
 use App\Payment;
 use Carbon\Carbon;
 use DB;
+use PDF;
 
 class OrderController extends Controller
 {
@@ -89,5 +90,21 @@ class OrderController extends Controller
 	        //DAN KIRIMKAN PESAN ERROR
 	        return redirect()->back()->with(['error' => $e->getMessage()]);
 	    }
+	}
+	
+	public function pdf($invoice)
+	{
+	    //GET DATA ORDER BERDASRKAN INVOICE
+	    $order = Order::with(['district.city.province', 'details', 'details.product', 'payment'])
+	        ->where('invoice', $invoice)->first();
+	    //MENCEGAH DIRECT AKSES OLEH USER, SEHINGGA HANYA PEMILIKINYA YANG BISA MELIHAT FAKTURNYA
+	    if (!\Gate::forUser(auth()->guard('customer')->user())->allows('order-view', $order)) {
+	        return redirect(route('customer.view_order', $order->invoice));
+	    }
+
+	    //JIKA DIA ADALAH PEMILIKNYA, MAKA LOAD VIEW BERIKUT DAN PASSING DATA ORDERS
+	    $pdf = PDF::loadView('ecommerce.orders.pdf', compact('order'));
+	    //KEMUDIAN BUKA FILE PDFNYA DI BROWSER
+	    return $pdf->stream();
 	}
 }
