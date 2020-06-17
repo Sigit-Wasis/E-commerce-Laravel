@@ -9,13 +9,16 @@ use App\Payment;
 use Carbon\Carbon;
 use DB;
 use PDF;
+use App\OrderReturn;
+use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
     public function index()
 	{
-	    $orders = Order::where('customer_id', auth()->guard('customer')->user()->id)->orderBy('created_at', 'DESC')->paginate(10);
-	    return view('ecommerce.orders.index', compact('orders'));
+	    $orders = Order::withCount(['return'])->where('customer_id', auth()->guard('customer')->user()->id)
+        ->orderBy('created_at', 'DESC')->paginate(10);
+    return view('ecommerce.orders.index', compact('orders'));
 	}
 
 	public function view($invoice)
@@ -106,5 +109,64 @@ class OrderController extends Controller
 	    $pdf = PDF::loadView('ecommerce.orders.pdf', compact('order'));
 	    //KEMUDIAN BUKA FILE PDFNYA DI BROWSER
 	    return $pdf->stream();
+	}
+
+	public function acceptOrder(Request $request)
+	{
+	    //CARI DATA ORDER BERDASARKAN ID
+	    $order = Order::find($request->order_id);
+	    //VALIDASI KEPEMILIKAN
+	    if (!\Gate::forUser(auth()->guard('customer')->user())->allows('order-view', $order)) {
+	        return redirect()->back()->with(['error' => 'Bukan Pesanan Kamu']);
+	    }
+
+	    //UBAH STATUSNYA MENJADI 4
+	    $order->update(['status' => 4]);
+	    //REDIRECT KEMBALI DENGAN MENAMPILKAN ALERT SUCCESS
+	    return redirect()->back()->with(['success' => 'Pesanan Dikonfirmasi']);
+	}
+
+	public function returnForm($invoice)
+	{
+	    //LOAD DATA BERDASARKAN INVOICE
+	    $order = Order::where('invoice', $invoice)->first();
+	    //LOAD VIEW RETURN.BLADE.PHP DAN PASSING DATA ORDER
+	    return view('ecommerce.orders.return', compact('order'));
+	}
+
+	public function processReturn(Request $request, $id)
+	{
+	    //LAKUKAN VALIDASI DATA
+	    $this->validate($request, [
+	        'reason' => 'required|string',
+	        'refund_transfer' => 'required|string',
+	        'photo' => 'required|image|mimes:jpg,png,jpeg'
+	    ]);
+
+	    //CARI DATA RETURN BERDASARKAN order_id YANG ADA DITABLE ORDER_RETURNS NANTINYA
+	    $return = OrderReturn::where('order_id', $id)->first();
+	    //JIKA DITEMUKAN, MAKA TAMPILKAN NOTIFIKASI ERROR
+	    if ($return) return redirect()->back()->with(['error' => 'Permintaan Refund Dalam Proses']);
+
+	    //JIKA TIDAK, LAKUKAN PENGECEKAN UNTUK MEMASTIKAN FILE FOTO DIKIRIMKAN
+	    if ($request->hasFile('photo')) {
+	        //GET FILE
+	        $file = $request->file('photo');
+	        //GENERATE NAMA FILE BERDASARKAN TIME DAN STRING RANDOM
+	        $filename = time() . Str::random(5) . '.' . $file->getClientOriginalExtension();
+	        //KEMUDIAN UPLOAD KE DALAM FOLDER STORAGE/APP/PUBLIC/RETURN
+	        $file->storeAs('public/return', $filename);
+
+	        //DAN SIMPAN INFORMASINYA KE DALAM TABLE ORDER_RETURNS
+	        OrderReturn::create([
+	            'order_id' => $id,
+	            'photo' => $filename,
+	            'reason' => $request->reason,
+	            'refund_transfer' => $request->refund_transfer,
+	            'status' => 0
+	        ]);
+	        //LALU TAMPILKAN NOTIFIKASI SUKSES
+	        return redirect()->back()->with(['success' => 'Permintaan Refund Dikirim']);
+	    }
 	}
 }

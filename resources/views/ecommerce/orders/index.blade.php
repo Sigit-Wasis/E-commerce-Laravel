@@ -35,6 +35,9 @@
                 <div class="card-header">
                     <h4 class="card-title">List Pesanan</h4>
                 </div>
+                @if (session('success'))
+                <div class="alert alert-success">{{ session('success') }}</div>
+                @endif
 								<div class="card-body">
                   @if (session('error'))
                     <div class="alert alert-danger">{{ session('error') }}</div>
@@ -71,9 +74,11 @@
                                         <a href="{{ route('customer.view_order', $row->invoice) }}" class="btn btn-primary btn-sm mr-1">Detail</a>
                                       
                                         <input type="hidden" name="order_id" value="{{ $row->id }}">
-                                        @if ($row->status == 3)
+                                        <!-- KONDISINYA DITAMBAHKAN, JIKA RETURN_COUNT = 0 -->
+                                        @if ($row->status == 3 && $row->return_count == 0)
                                             <button class="btn btn-success btn-sm">Terima</button>
-                                            <!-- TOMBOL RETURN AKAN DITEMPATKAN DISINI PADA SUB-BAB SELANJUTNYA -->
+                                            <!-- TOMBOL UNTUK MENGARAH KE HALAMAN RETURN -->
+                                            <a href="{{ route('customer.order_return', $row->invoice) }}" class="btn btn-danger btn-sm mt-1">Return</a>
                                         @endif
                                     </form>
                                   </td>
