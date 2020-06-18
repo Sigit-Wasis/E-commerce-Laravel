@@ -136,37 +136,67 @@ class OrderController extends Controller
 
 	public function processReturn(Request $request, $id)
 	{
-	    //LAKUKAN VALIDASI DATA
-	    $this->validate($request, [
-	        'reason' => 'required|string',
-	        'refund_transfer' => 'required|string',
-	        'photo' => 'required|image|mimes:jpg,png,jpeg'
-	    ]);
+		$this->validate($request, [
+		    'reason' => 'required|string',
+		    'refund_transfer' => 'required|string',
+		    'photo' => 'required|image|mimes:jpg,png,jpeg'
+		]);
 
-	    //CARI DATA RETURN BERDASARKAN order_id YANG ADA DITABLE ORDER_RETURNS NANTINYA
-	    $return = OrderReturn::where('order_id', $id)->first();
-	    //JIKA DITEMUKAN, MAKA TAMPILKAN NOTIFIKASI ERROR
-	    if ($return) return redirect()->back()->with(['error' => 'Permintaan Refund Dalam Proses']);
+		$return = OrderReturn::where('order_id', $id)->first();
+		if ($return) return redirect()->back()->with(['error' => 'Permintaan Refund Dalam Proses']);
 
-	    //JIKA TIDAK, LAKUKAN PENGECEKAN UNTUK MEMASTIKAN FILE FOTO DIKIRIMKAN
-	    if ($request->hasFile('photo')) {
-	        //GET FILE
-	        $file = $request->file('photo');
-	        //GENERATE NAMA FILE BERDASARKAN TIME DAN STRING RANDOM
-	        $filename = time() . Str::random(5) . '.' . $file->getClientOriginalExtension();
-	        //KEMUDIAN UPLOAD KE DALAM FOLDER STORAGE/APP/PUBLIC/RETURN
-	        $file->storeAs('public/return', $filename);
+		if ($request->hasFile('photo')) {
+		    $file = $request->file('photo');
+		    $filename = time() . Str::random(5) . '.' . $file->getClientOriginalExtension();
+		    $file->storeAs('public/return', $filename);
 
-	        //DAN SIMPAN INFORMASINYA KE DALAM TABLE ORDER_RETURNS
-	        OrderReturn::create([
-	            'order_id' => $id,
-	            'photo' => $filename,
-	            'reason' => $request->reason,
-	            'refund_transfer' => $request->refund_transfer,
-	            'status' => 0
-	        ]);
-	        //LALU TAMPILKAN NOTIFIKASI SUKSES
-	        return redirect()->back()->with(['success' => 'Permintaan Refund Dikirim']);
+		    OrderReturn::create([
+		        'order_id' => $id,
+		        'photo' => $filename,
+		        'reason' => $request->reason,
+		        'refund_transfer' => $request->refund_transfer,
+		        'status' => 0
+		    ]);
+		  
+		    //CODE BARU HANYA PADA BAGIAN INI SAJA
+		    $order = Order::find($id); //AMBIL DATA ORDER BERDASARKAN ID
+		    //KIRIM PESAN MELALUI BOT
+		    $this->sendMessage('#' . $order->invoice, $request->reason); 
+		    //CODE BARU HANYA PADA BAGIAN INI SAJA
+		    
+		    return redirect()->back()->with(['success' => 'Permintaan Refund Dikirim']);
+		}
+	}
+
+	//REUSABLE CURL AGAR TIDAK MENULISKAN CODE YANG SAMA BERULANG KALI
+	private function getTelegram($url, $params)
+	{
+	    $ch = curl_init();
+	    curl_setopt($ch, CURLOPT_URL, $url . $params); 
+
+	    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	    curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+	    $content = curl_exec($ch);
+	    curl_close($ch);
+	    return json_decode($content, true);
+	}
+
+	private function sendMessage($order_id, $reason)
+	{
+	    $key = env('TELEGRAM_KEY'); //AMBIL TOKEN DARI ENV
+	    //KEMUDIAN KIRIM REQUEST KE TELEGRAM UNTUK MENGAMBIL DATA USER YANG ME-LISTEN BOT KITA
+	    $chat = $this->getTelegram('https://api.telegram.org/'. $key .'/getUpdates', '');
+	    //JIKA ADA
+	    if ($chat['ok']) {
+	        //SAYA BERASUMSI PESAN INI HANYA DIKIRIM KE ADMIN, MAKA KITA TIDAK PERLU MELOOPING HASIL DARI GET DATA USER
+	        //CUKUP MENGAMBIL KEY 0 SAJA ATAU LIST YANG PERTAMA
+	        //UNTUK MENDAPATKAN CHAT_ID
+	        $chat_id = $chat['result'][0]['message']['chat']['id'];
+	        //TEKS YANG DIINGINKAN
+	        $text = 'Hai DaengWeb, OrderID ' . $order_id . ' Melakukan Permintaan Refund Dengan Alasan "'. $reason .'", Segera Dicek Ya!';
+	      
+	        //DAN KIRIM REQUEST KE TELEGRAM UNTUK MENGIRIMKAN PESAN
+	        return $this->getTelegram('https://api.telegram.org/'. $key .'/sendMessage', '?chat_id=' . $chat_id . '&text=' . $text);
 	    }
 	}
 }
