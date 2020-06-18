@@ -80,4 +80,13 @@ class OrderController extends Controller
 	    $order = Order::with(['return', 'customer'])->where('invoice', $invoice)->first();
 	    return view('orders.return', compact('order'));
 	}
+
+	public function approveReturn(Request $request)
+	{
+	    $this->validate($request, ['status' => 'required']); //validasi status
+	    $order = Order::find($request->order_id); //query berdasarkan order_id
+	    $order->return()->update(['status' => $request->status]); //update status yang ada di table order_returns melalui order
+	    $order->update(['status' => 4]); //update status yang ada di table orders
+	    return redirect()->back();
+	}
 }
