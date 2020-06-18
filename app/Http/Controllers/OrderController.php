@@ -14,7 +14,8 @@ class OrderController extends Controller
 	    //QUERY UNTUK MENGAMBIL SEMUA PESANAN DAN LOAD DATA YANG BERELASI MENGGUNAKAN EAGER LOADING
 	    //DAN URUTANKAN BERDASARKAN CREATED_AT
 	    $orders = Order::with(['customer.district.city.province'])
-	        ->orderBy('created_at', 'DESC');
+        ->withCount('return')
+        ->orderBy('created_at', 'DESC');
 
 	    //JIKA Q UNTUK PENCARIAN TIDAK KOSONG
 	    if (request()->q != '') {
@@ -72,5 +73,11 @@ class OrderController extends Controller
 	    Mail::to($order->customer->email)->send(new OrderMail($order));
 	    //REDIRECT KEMBALI
 	    return redirect()->back();
+	}
+
+	public function return($invoice)
+	{
+	    $order = Order::with(['return', 'customer'])->where('invoice', $invoice)->first();
+	    return view('orders.return', compact('order'));
 	}
 }
