@@ -89,6 +89,8 @@ Route::group(['prefix' => 'administrator', 'middleware' => 'auth'], function() {
         Route::get('/order', 'HomeController@orderReport')->name('report.order');
         Route::get('/order/pdf/{daterange}', 'HomeController@orderReportPdf')->name('report.order_pdf');
       
+        Route::get('/return', 'HomeController@returnReport')->name('report.return');
+        Route::get('/return/pdf/{daterange}', 'HomeController@returnReportPdf')->name('report.return_pdf');
     });
 });
 
