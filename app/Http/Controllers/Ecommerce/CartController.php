@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 use DB;
 use App\Mail\CustomerRegisterMail;
 use Mail;
+use Cookie;
 
 class CartController extends Controller
 {
@@ -137,9 +138,13 @@ class CartController extends Controller
 
         DB::beginTransaction();
         try {
-            $customer = Customer::where('email', $request->email)->first();
+            //TAMBAHKAN DUA BARI CODE INI
+            //GET COOKIE DARI BROWSER
+            $affiliate = json_decode(request()->cookie('dw-afiliasi'), true);
+            //EXPLODE DATA COOKIE UNTUK MEMISAHKAN USERID DAN PRODUCTID
+            $explodeAffiliate = explode('-', $affiliate);
 
-            //LAKUKAN PERUBAHAN PADA BAGIAN INI
+            $customer = Customer::where('email', $request->email)->first();
             if (!auth()->guard('customer')->check() && $customer) {
                 return redirect()->back()->with(['error' => 'Silahkan Login Terlebih Dahulu']);
             }
@@ -149,8 +154,6 @@ class CartController extends Controller
                 return $q['qty'] * $q['product_price'];
             });
 
-            //UNTUK MENGHINDARI DUPLICATE CUSTOMER, MASUKKAN QUERY UNTUK MENAMBAHKAN CUSTOMER BARU
-            //SEBENARNYA VALIDASINYA BISA DIMASUKKAN PADA METHOD VALIDATION DIATAS, TAPI TIDAK MENGAPA UNTUK MENCOBA CARA BERBEDA
             if (!auth()->guard('customer')->check()) {
                 $password = Str::random(8);
                 $customer = Customer::create([
@@ -172,8 +175,10 @@ class CartController extends Controller
                 'customer_phone' => $request->customer_phone,
                 'customer_address' => $request->customer_address,
                 'district_id' => $request->district_id,
-                'subtotal' => $subtotal
+                'subtotal' => $subtotal,
+                'ref' => $affiliate != '' && $explodeAffiliate[0] != auth()->guard('customer')->user()->id ? $affiliate:NULL
             ]);
+            //CODE DIATAS MELAKUKAN PENGECEKAN JIKA USERID NYA BUKAN DIRINYA SENDIRI, MAKA AFILIASINYA DISIMPAN
 
             foreach ($carts as $row) {
                 $product = Product::find($row['product_id']);
@@ -190,8 +195,9 @@ class CartController extends Controller
 
             $carts = [];
             $cookie = cookie('dw-carts', json_encode($carts), 2880);
+            //KEMUDIAN HAPUS DATA COOKIE AFILIASI
+            Cookie::queue(Cookie::forget('dw-afiliasi'));
 
-            //EMAILNYA JUGA UNTUK CUSTOMER BARU
             if (!auth()->guard('customer')->check()) {
                 Mail::to($request->email)->send(new CustomerRegisterMail($customer, $password));
             }
