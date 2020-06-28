@@ -25,7 +25,9 @@ Route::post('cart', 'Ecommerce\CartController@addToCart')->name('front.cart');
 Route::get('/cart', 'Ecommerce\CartController@listCart')->name('front.list_cart');
 Route::post('/cart/update', 'Ecommerce\CartController@updateCart')->name('front.update_cart');
 
+// Afiliasi
 Route::get('/product/ref/{user}/{product}', 'Ecommerce\FrontController@referalProduct')->name('front.afiliasi');
+Route::get('/afiliasi', 'Ecommerce\FrontController@listCommission')->name('customer.affiliate');
 
 // Cart-Checkout
 Route::get('/checkout', 'Ecommerce\CartController@checkout')->name('front.checkout');

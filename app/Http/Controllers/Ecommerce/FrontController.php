@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Product;
 use App\Category;
 use App\Province;
+use App\Order;
 use App\Customer;
 
 class FrontController extends Controller
@@ -108,5 +109,14 @@ class FrontController extends Controller
 	    $cookie = cookie('dw-afiliasi', json_encode($code), 2880); //BUAT COOKIE DENGAN NAMA DW-AFILIASI DAN VALUENYA ADALAH CODE YANG SUDAH DI-MERGE
 	    //KEMUDIAN REDIRECT KE HALAMAN SHOW PRODUCT DAN MENGIRIMKAN COOKIE KE BROWSER
 	    return redirect(route('front.show_product', $product->slug))->cookie($cookie);
+	}
+
+	public function listCommission()
+	{
+	    $user = auth()->guard('customer')->user(); //AMBIL DATA USER YANG LOGIN
+	    //QUERY BERDASARKAN ID USER DARI DATA REF YANG ADA DIORDER DENGAN STATUS 4 ATAU SELESAI
+	    $orders = Order::where('ref', $user->id)->where('status', 4)->paginate(10);
+	    //LOAD VIEW AFFILIATE.BLADE.PHP DAN PASSING DATA ORDERS
+	    return view('ecommerce.affiliate', compact('orders'));
 	}
 }
