@@ -19,3 +19,4 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::get('city', 'Ecommerce\CartController@getCity'); //ROUTE API UNTUK /CITY
 Route::get('district', 'Ecommerce\CartController@getDistrict'); //ROUTE API UNTUK /DISTRICT
+Route::post('cost', 'Ecommerce\CartController@getCourier');

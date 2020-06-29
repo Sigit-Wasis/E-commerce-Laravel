@@ -16,6 +16,7 @@ use DB;
 use App\Mail\CustomerRegisterMail;
 use Mail;
 use Cookie;
+use GuzzleHttp\Client;
 
 class CartController extends Controller
 {
@@ -214,5 +215,32 @@ class CartController extends Controller
 	    $order = Order::with(['district.city'])->where('invoice', $invoice)->first();
 	    //LOAD VIEW checkout_finish.blade.php DAN PASSING DATA ORDER
 	    return view('ecommerce.checkout_finish', compact('order'));
+	}
+
+	public function getCourier(Request $request)
+	{
+	    $this->validate($request, [
+	        'destination' => 'required',
+	        'weight' => 'required|integer'
+	    ]);
+
+	    //MENGIRIM PERMINTAAN KE API RUANGAPI UNTUK MENGAMBIL DATA ONGKOS KIRIM
+	    //BACA DOKUMENTASI UNTUK PENJELASAN LEBIH LANJUT
+	    $url = 'https://ruangapi.com/api/v1/shipping';
+	    $client = new Client();
+	    $response = $client->request('POST', $url, [
+	        'headers' => [
+	            'Authorization' => 'API KEY ANDA'
+	        ],
+	        'form_params' => [
+	            'origin' => 22, //ASAL PENGIRIMAN, 22 = BANDUNG
+	            'destination' => $request->destination,
+	            'weight' => $request->weight,
+	            'courier' => 'jne,jnt' //MASUKKAN KEY KURIR LAINNYA JIKA INGIN MENDAPATKAN DATA ONGKIR DARI KURIR YANG LAIN
+	        ]
+	    ]);
+
+	    $body = json_decode($response->getBody(), true);
+	    return $body;
 	}
 }
