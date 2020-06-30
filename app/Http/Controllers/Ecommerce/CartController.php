@@ -44,7 +44,8 @@ class CartController extends Controller
 	            'product_id' => $product->id,
 	            'product_name' => $product->name,
 	            'product_price' => $product->price,
-	            'product_image' => $product->image
+	            'product_image' => $product->image,
+	            'weight' => $product->weight
 	        ];
 	    }
 
@@ -52,7 +53,7 @@ class CartController extends Controller
 	    //JANGAN LUPA UNTUK DI-ENCODE KEMBALI, DAN LIMITNYA 2800 MENIT ATAU 48 JAM
 	    $cookie = cookie('dw-carts', json_encode($carts), 2880);
 	    //STORE KE BROWSER UNTUK DISIMPAN
-	    return redirect()->back()->cookie($cookie);
+	    return redirect()->back()->with(['success' => 'Produk Ditambahkan ke Keranjang'])->cookie($cookie);
 	}
 
 	public function listCart()
@@ -105,8 +106,14 @@ class CartController extends Controller
 	    $subtotal = collect($carts)->sum(function($q) {
 	        return $q['qty'] * $q['product_price'];
 	    });
+
+	    //TAMBAHKAN FUNGSI UNTUK MENGHITUNG BERAT BARANG
+	    $weight = collect($carts)->sum(function($q) {
+	        return $q['qty'] * $q['weight'];
+	    })
+
 	    //ME-LOAD VIEW CHECKOUT.BLADE.PHP DAN PASSING DATA PROVINCES, CARTS DAN SUBTOTAL
-	    return view('ecommerce.checkout', compact('provinces', 'carts', 'subtotal'));
+	    return view('ecommerce.checkout', compact('provinces', 'carts', 'subtotal', 'weight'));
 	}
 
 	public function getCity()
