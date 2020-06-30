@@ -134,7 +134,8 @@ class CartController extends Controller
             'customer_address' => 'required|string',
             'province_id' => 'required|exists:provinces,id',
             'city_id' => 'required|exists:cities,id',
-            'district_id' => 'required|exists:districts,id'
+            'district_id' => 'required|exists:districts,id',
+            'courier' => 'required'
         ]);
 
         DB::beginTransaction();
@@ -169,16 +170,19 @@ class CartController extends Controller
                 ]);
             }
 
-            $order = Order::create([
-                'invoice' => Str::random(4) . '-' . time(),
-                'customer_id' => $customer->id,
-                'customer_name' => $customer->name,
-                'customer_phone' => $request->customer_phone,
-                'customer_address' => $request->customer_address,
-                'district_id' => $request->district_id,
-                'subtotal' => $subtotal,
-                'ref' => $affiliate != '' && $explodeAffiliate[0] != auth()->guard('customer')->user()->id ? $affiliate:NULL
-            ]);
+            $shipping = explode('-', $request->courier); //EXPLODE DATA KURIR, KARENA FORMATNYA, NAMAKURIR-SERVICE-COST
+			$order = Order::create([
+			    'invoice' => Str::random(4) . '-' . time(),
+			    'customer_id' => $customer->id,
+			    'customer_name' => $customer->name,
+			    'customer_phone' => $request->customer_phone,
+			    'customer_address' => $request->customer_address,
+			    'district_id' => $request->district_id,
+			    'subtotal' => $subtotal,
+			    'cost' => $shipping[2], //SIMPAN INFORMASI BIAYA ONGKIRNYA PADA INDEX 2
+			    'shipping' => $shipping[0] . '-' . $shipping[1], //SIMPAN NAMA KURIR DAN SERVICE YANG DIGUNAKAN
+			    'ref' => $affiliate != '' && $explodeAffiliate[0] != auth()->guard('customer')->user()->id ? $affiliate:NULL
+			]);
             //CODE DIATAS MELAKUKAN PENGECEKAN JIKA USERID NYA BUKAN DIRINYA SENDIRI, MAKA AFILIASINYA DISIMPAN
 
             foreach ($carts as $row) {

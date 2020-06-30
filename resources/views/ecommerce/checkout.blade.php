@@ -94,6 +94,14 @@
                             </select>
                             <p class="text-danger">{{ $errors->first('district_id') }}</p>
                         </div>
+                        <div class="col-md-12 form-group p_star">
+                            <label for="">Kurir</label>
+                            <input type="hidden" name="weight" id="weight" value="{{ $weight }}">
+                            <select class="form-control" name="courier" id="courier" required>
+                                <option value="">Pilih Kurir</option>
+                            </select>
+                            <p class="text-danger">{{ $errors->first('courier') }}</p>
+                        </div>
                 <!-- ADAPUN DATA KOTA DAN KECAMATAN AKAN DI RENDER SETELAH PROVINSI DIPILIH -->
                     
 					</div>
@@ -123,12 +131,12 @@
 								</li>
 								<li>
 									<a href="#">Pengiriman
-										<span>Rp 0</span>
+										<span id="ongkir">Rp 0</span>
 									</a>
 								</li>
 								<li>
 									<a href="#">Total
-										<span>Rp {{ number_format($subtotal) }}</span>
+										<span id="total">Rp {{ number_format($subtotal) }}</span>
 									</a>
 								</li>
 							</ul>
@@ -180,6 +188,45 @@
                     })
                 }
             });
+        })
+
+        //JIKA KECAMATAN DIPILIH
+        $('#district_id').on('change', function() {
+            //MEMBUAT EFEK LOADING SELAMA PROSES REQUEST BERLANGSUNG
+            $('#courier').empty()
+            $('#courier').append('<option value="">Loading...</option>')
+          
+            //MENGIRIM PERMINTAAN KE SERVER UNTUK MENGAMBIL DATA API
+            $.ajax({
+                url: "{{ url('/api/cost') }}",
+                type: "POST",
+                data: { destination: $(this).val(), weight: $('#weight').val() },
+                success: function(html){
+                    //BERSIHKAN AREA SELECT BOX
+                    $('#courier').empty()
+                    $('#courier').append('<option value="">Pilih Kurir</option>')
+                  
+                    //LOOPING DATA ONGKOS KIRIM
+                    $.each(html.data.results, function(key, item) {
+                        let courier = item.courier + ' - ' + item.service + ' (Rp '+ item.cost +')'
+                        let value = item.courier + '-' + item.service + '-'+ item.cost
+                        //DAN MASUKKAN KE DALAM OPTION SELECT BOX
+                        $('#courier').append('<option value="'+value+'">' + courier + '</option>')
+                    })
+                }
+            });
+        })
+
+        //JIKA KURIR DIPILIH
+        $('#courier').on('change', function() {
+            //UPDATE INFORMASI BIAYA PENGIRIMAN
+            let split = $(this).val().split('-')
+            $('#ongkir').text('Rp ' + split[2])
+
+            //UPDATE INFORMASI TOTAL (SUBTOTAL + ONGKIR)
+            let subtotal = "{{ $subtotal }}"
+            let total = parseInt(subtotal) + parseInt(split['2'])
+            $('#total').text('Rp' + total)
         })
     </script>
 @endsection
