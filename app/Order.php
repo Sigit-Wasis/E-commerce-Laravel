@@ -9,7 +9,7 @@ class Order extends Model
     protected $guarded = [];
 
     //  Ingat, Accessor dimulai dengan key get dan diakhiri dengan key attribute.
-    protected $appends = ['status_label', 'ref_status_label', 'commission'];
+    protected $appends = ['status_label', 'ref_status_label', 'commission', 'total'];
 
 	public function getStatusLabelAttribute()
 	{
@@ -67,5 +67,10 @@ class Order extends Model
 	    $commission = ($this->subtotal * 10) / 100;
 	    //TAPI JIKA LEBIH DARI 10.000 MAKA YANG DIKEMBALIKAN ADALAH 10.000
 	    return $commission > 10000 ? 10000:$commission;
+	}
+
+	public function getTotalAttribute()
+	{
+	    return $this->subtotal + $this->cost;
 	}
 }
