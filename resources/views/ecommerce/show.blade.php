@@ -73,12 +73,14 @@
 						    </button>
 						  </div>
 						  <div class="card_area">
-						    
 						    <!-- UBAH JADI BUTTON -->
 						    <button class="main_btn">Add to Cart</button>
 						    <!-- UBAH JADI BUTTON -->
-						    
 						  </div>
+
+						  	@if (session('success'))
+							<div class="alert alert-success mt-2">{{ session('success') }}</div>
+							@endif
 						</form>
 					</div>
 				</div>
