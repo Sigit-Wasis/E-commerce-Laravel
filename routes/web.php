@@ -77,6 +77,8 @@ Route::group(['prefix' => 'administrator', 'middleware' => 'auth'], function() {
 	Route::resource('product', 'ProductController')->except(['show']); //BAGIAN INI KITA TAMBAHKAN EXCETP KARENA METHOD SHOW TIDAK DIGUNAKAN
 	Route::get('/product/bulk', 'ProductController@massUploadForm')->name('product.bulk'); //TAMBAHKAN ROUTE INI
 	Route::post('/product/bulk', 'ProductController@massUpload')->name('product.saveBulk');
+    // upload produk marketplace
+    Route::post('/product/marketplace', 'ProductController@uploadViaMarketplace')->name('product.marketplace');
 
     Route::group(['prefix' => 'orders'], function() {
         Route::get('/', 'OrderController@index')->name('orders.index');
