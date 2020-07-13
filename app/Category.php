@@ -34,6 +34,7 @@ class Category extends Model
 	//ACCESSOR
 	public function getNameAttribute($value)
 	{
+		// mengubah huruf pada awal paragraf menjadi besar
 	    return ucfirst($value);
 	}
 
